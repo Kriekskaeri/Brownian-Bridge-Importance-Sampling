@@ -71,29 +71,31 @@ col_names <- c(
 
 # Sim 1: varying delta_t, fixed number of observations -------------------- ####
 print("varying delta_t, fixed number of observations")
-sim_var <- c(5, 10, 20, 50, 100) * 36
+sim_var <- c(1.0, 2.0, 12.0, 24.0, 48.0) / dt
 sim_results <- data.frame()  # refresh result target
 for (ik in 1:n_sim) {
   
   #simulate track
   beta_sim <- beta
-  X <- simLMM(dt, speed, covlist, beta_sim, loc0, n_obs_sim)
+  n_obs_sim <- n_obs
+  X_full <- simLMM(dt, speed, covlist, beta_sim, loc0, n_obs_sim)
   
   for (jk in seq_along(sim_var)) {
     # set up simulation parameters
     thin_sim <- sim_var[jk]
     dt_sim <- dt
-    delta <- dt_sim * thin_sim * 4
-    N_sim <- 1 / delta - 1
+    delta <- dt_sim * thin_sim
+    N_sim <- delta * (60 / 15) - 1
+    
     M_sim <- M
-    n_obs_sim <- n_obs
     Tmax <- n_obs_sim * thin_sim * dt_sim
     
     # thinning track
+    X_thin = thinTrack(X_full, N_sim)
     
     # estimate with euler
-    UD <- langevinUD(X, (0:(nrow(X) - 1)) * delta, 
-                     grad_array = bilinearGradArray(X, covlist))
+    UD <- langevinUD(X_thin, (0:(nrow(X_thin) - 1)) * delta, 
+                     grad_array = bilinearGradArray(X_thin, covlist))
     ## extract & store euler outputs  
     sim_results <- data.frame(ik, "euler",   # sim & method
                               dt_sim, Tmax,  # sim conditions
@@ -105,8 +107,8 @@ for (ik in 1:n_sim) {
       rbind(sim_results, .)
     
     # estimate with bbis
-    X <- data.frame(x = X[, 1], y = X[, 2])
-    out <- fit_langevin_bbis(X, covlist, delta, N = N_sim, M = M_sim,
+    X_thin <- data.frame(x = X_thin[, 1], y = X_thin[, 2])
+    out <- fit_langevin_bbis(X_thin, covlist, delta, N = N_sim, M = M_sim,
                              ncores = ncores, fixed_sampling = TRUE)  
     
     # extract & store bbis outputs
@@ -123,6 +125,8 @@ for (ik in 1:n_sim) {
   write.csv(sim_results, file = here(output_path,"varying_thin_estimates.csv"), 
             row.names = F)
 }
+
+
 
 # Sim 2: varying delta_t, fixed maximum time ------------------------------ ####
 print("varying delta_t, fixed maximum time")
