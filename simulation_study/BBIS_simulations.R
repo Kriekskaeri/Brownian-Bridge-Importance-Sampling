@@ -74,19 +74,22 @@ print("varying delta_t, fixed number of observations")
 sim_var <- c(5, 10, 20, 50, 100) * 36
 sim_results <- data.frame()  # refresh result target
 for (ik in 1:n_sim) {
+  
+  #simulate track
+  beta_sim <- beta
+  X <- simLMM(dt, speed, covlist, beta_sim, loc0, n_obs_sim)
+  
   for (jk in seq_along(sim_var)) {
     # set up simulation parameters
-    beta_sim <- beta
     thin_sim <- sim_var[jk]
     dt_sim <- dt
-    delta <- dt_sim*thin_sim
-    N_sim <- thin_sim-1
+    delta <- dt_sim * thin_sim * 4
+    N_sim <- 1 / delta - 1
     M_sim <- M
     n_obs_sim <- n_obs
-    Tmax <- n_obs_sim*thin_sim*dt_sim
+    Tmax <- n_obs_sim * thin_sim * dt_sim
     
-    # simulating track
-    X <- simLMM(delta, speed, covlist, beta_sim, loc0, n_obs_sim)
+    # thinning track
     
     # estimate with euler
     UD <- langevinUD(X, (0:(nrow(X) - 1)) * delta, 
