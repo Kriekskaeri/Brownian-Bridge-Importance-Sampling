@@ -1,6 +1,6 @@
 # simulate langevin track (High-res)
 sumLTrack <- function(dt, gamma2, covlist, beta, loc0, nobs) {
-  x = mvnfast::rmvn(nobs, rep(0,2), dt*gamma2*diag(1,2,2))
+  x = mvnfast::rmvn(nobs, rep(0,2), dt * gamma2 * diag(1,2,2))
   x[1, ] <- loc0 
   for (i in 2:nrow(x)) {
     grad = bilinearGradVec(matrix(x[i-1, 1:2], nrow=1), covlist)

@@ -78,12 +78,12 @@ for (ik in 1:n_sim) {
   #simulate track
   beta_sim <- beta
   n_obs_sim <- n_obs
-  X_full <- simLMM(dt, speed, covlist, beta_sim, loc0, n_obs_sim)
+  dt_sim <- dt
+  X_full <- simLMM(dt_sim, speed, covlist, beta_sim, loc0, n_obs_sim)
   
   for (jk in seq_along(sim_var)) {
     # set up simulation parameters
     thin_sim <- sim_var[jk]
-    dt_sim <- dt
     delta <- dt_sim * thin_sim
     N_sim <- delta * (60 / 15) - 1
     
@@ -91,7 +91,7 @@ for (ik in 1:n_sim) {
     Tmax <- n_obs_sim * thin_sim * dt_sim
     
     # thinning track
-    X_thin = thinTrack(X_full, N_sim)
+    X_thin = thinTrack(X_full, thin_sim)
     
     # estimate with euler
     UD <- langevinUD(X_thin, (0:(nrow(X_thin) - 1)) * delta, 
